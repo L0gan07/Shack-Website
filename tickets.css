@@ -1,210 +1,120 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'DM Sans', sans-serif;
-    background: #0d0d0d;
-    color: white;
-    min-height: 100vh;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    padding: 40px;
-}
-
-/* Container */
-
+/* =========================
+   PAGE WRAPPER
+========================= */
 .ticket-container {
-
     width: 100%;
     max-width: 700px;
 
-    background: rgba(255,255,255,0.03);
-
-    border: 1px solid rgba(255,255,255,0.08);
-
-    border-radius: 20px;
-
+    margin: 120px auto;
     padding: 40px;
 
-    box-shadow: 0 0 40px rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
 
-    backdrop-filter: blur(12px);
+    box-shadow: 0 0 40px rgba(0,0,0,0.4);
 
-    animation: fadeUp .6s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-@keyframes fadeUp{
+/* =========================
+   TITLE
+========================= */
+.ticket-container h1 {
+    font-size: 32px;
+    margin: 0;
+    font-family: 'DM Sans', sans-serif;
+}
 
-    from{
-        opacity:0;
-        transform:translateY(30px);
+.subtitle {
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 10px;
+}
+
+/* =========================
+   FORM
+========================= */
+#ticketForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* =========================
+   INPUTS
+========================= */
+#ticketForm input,
+#ticketForm select,
+#ticketForm textarea {
+    width: 100%;
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.3);
+
+    color: white;
+    font-size: 14px;
+
+    outline: none;
+    transition: 0.2s ease;
+}
+
+/* focus glow */
+#ticketForm input:focus,
+#ticketForm select:focus,
+#ticketForm textarea:focus {
+    border-color: rgba(255,255,255,0.3);
+    box-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+
+/* textarea height */
+#ticketForm textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+/* =========================
+   BUTTON
+========================= */
+#ticketForm button {
+    padding: 12px;
+    border-radius: 10px;
+
+    border: none;
+    cursor: pointer;
+
+    background: white;
+    color: black;
+
+    font-weight: bold;
+    transition: 0.2s ease;
+}
+
+#ticketForm button:hover {
+    transform: translateY(-2px);
+    background: #ddd;
+}
+
+/* =========================
+   RESPONSE MESSAGE
+========================= */
+#responseMessage {
+    margin-top: 10px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* =========================
+   MOBILE FIX
+========================= */
+@media (max-width: 600px) {
+    .ticket-container {
+        margin: 80px 20px;
+        padding: 25px;
     }
-
-    to{
-        opacity:1;
-        transform:translateY(0);
-    }
-
-}
-
-h1{
-
-    font-size:38px;
-    margin-bottom:10px;
-}
-
-.subtitle{
-
-    color:rgba(255,255,255,.6);
-
-    margin-bottom:35px;
-
-    line-height:1.6;
-}
-
-/* Form */
-
-form{
-
-    display:flex;
-    flex-direction:column;
-
-    gap:18px;
-}
-
-input,
-select,
-textarea{
-
-    width:100%;
-
-    padding:15px 18px;
-
-    background:rgba(255,255,255,.04);
-
-    border:1px solid rgba(255,255,255,.08);
-
-    border-radius:12px;
-
-    color:white;
-
-    font-size:15px;
-
-    font-family:'DM Sans',sans-serif;
-
-    transition:.25s;
-}
-
-input::placeholder,
-textarea::placeholder{
-
-    color:rgba(255,255,255,.4);
-
-}
-
-input:focus,
-textarea:focus,
-select:focus{
-
-    outline:none;
-
-    border-color:rgb(150,201,201);
-
-    box-shadow:0 0 20px rgba(150,201,201,.15);
-
-}
-
-textarea{
-
-    min-height:180px;
-
-    resize:vertical;
-}
-
-/* Dropdown */
-
-select{
-
-    cursor:pointer;
-}
-
-option{
-
-    background:#111;
-
-    color:white;
-}
-
-/* Button */
-
-button{
-
-    margin-top:10px;
-
-    padding:16px;
-
-    border:none;
-
-    border-radius:12px;
-
-    background:rgb(150,201,201);
-
-    color:black;
-
-    font-size:16px;
-
-    font-weight:700;
-
-    cursor:pointer;
-
-    transition:.25s;
-}
-
-button:hover{
-
-    transform:translateY(-3px);
-
-    box-shadow:0 0 25px rgba(150,201,201,.35);
-
-}
-
-button:active{
-
-    transform:scale(.98);
-
-}
-
-/* Success/Error */
-
-#responseMessage{
-
-    margin-top:25px;
-
-    text-align:center;
-
-    font-weight:600;
-}
-
-/* Mobile */
-
-@media(max-width:700px){
-
-.ticket-container{
-
-    padding:30px 20px;
-
-}
-
-h1{
-
-    font-size:30px;
-
-}
-
 }
