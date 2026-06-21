@@ -1,3 +1,4 @@
+console.log("Server is starting...");
 const express = require("express");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
