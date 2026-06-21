@@ -1,0 +1,168 @@
+.teamheader {
+    width: 90%;
+    max-width: 1400px;
+
+    margin: 80px auto 20px auto;
+
+    padding: 0 40px;
+
+    box-sizing: border-box;
+
+    text-align: left;
+}
+.teamhead {
+    font-size: 34px;
+    font-weight: 700;
+
+    font-family: 'DM Sans', sans-serif;
+    color: white;
+
+    margin: 0 0 10px 0;
+}
+.scenes {
+  color: rgb(150, 201, 201);
+}
+.teamquote {
+    font-size: 46px;
+    font-weight: 800;
+
+    font-family: 'DM Sans', sans-serif;
+    color: white;
+
+    margin: 0 0 15px 0;
+}
+
+.teamdesc {
+    font-size: 16px;
+    line-height: 1.6;
+
+    font-family: 'DM Sans', sans-serif;
+    color: rgba(255,255,255,0.7);
+
+    max-width: 700px;
+}
+    /*Staff Cards*/
+
+.teammembers {
+    width: 90%;
+    max-width: 1400px;
+
+    margin: 40px auto 100px auto;
+
+    padding: 0 40px;
+
+    box-sizing: border-box;
+
+    display: grid;
+
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    gap: 30px;
+}
+
+@media (max-width: 1400px) {
+    .teammembers {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 1100px) {
+    .teammembers {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    .teammembers {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 500px) {
+    .teammembers {
+        grid-template-columns: 1fr;
+    }
+}
+.staffcard {
+    width: 100%;
+    min-height: 170px;
+
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+
+    border-radius: 16px;
+
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    box-sizing: border-box;
+
+    transition: 0.25s ease;
+
+    position: relative;
+    overflow: hidden;
+}
+.staffcard:hover {
+    transform: translateY(-5px);
+
+    border-color: rgba(255,255,255,0.15);
+
+    box-shadow: 0 0 25px rgba(255,255,255,0.05);
+}
+
+.staffcardheader {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.memberphoto {
+    width: 52px;
+    height: 52px;
+
+    border-radius: 50%;
+    object-fit: cover;
+
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+.memberinfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.membername {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    color: white;
+
+    font-family: 'DM Sans', sans-serif;
+}
+
+.memberrole {
+    margin-top: 3px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    color: rgb(150, 201, 201);
+
+    font-family: 'DM Sans', sans-serif;
+}
+
+.memberdescription {
+    margin: 0;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    color: rgba(255,255,255,0.7);
+
+    font-family: 'DM Sans', sans-serif;
+}

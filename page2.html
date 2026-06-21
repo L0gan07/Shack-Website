@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinnacle MC</title>
+    <link rel="stylesheet" href="page2.css">
+    <link rel="stylesheet" href="home.css">
+</head>
+
+<body>
+
+<div class="topbar">
+    <img class="sparkslogo" src="sparkslogo.png" alt="Sparks Logo">
+
+    <div class="buttons">
+        <button onclick="window.location.href='home.html'" class="homebutton">Home</button>
+        <button onclick="window.location.href='page1.html'" class="softwarebutton">Software</button>
+        <button onclick="window.location.href='page2.html'" class="minecraftbutton">Pinnacle MC</button>
+        <button onclick="window.location.href='page3.html'" class="teambutton">Team</button>
+    </div>
+
+    <div class="sidebuttons">
+        <button class="explorebutton">Explore</button>
+        <a href="https://discord.gg/7FnMzcpvvU" class="supportbutton">Support</a>
+    </div>
+</div>
+
+<!-- Page Header -->
+<div class="pTop">
+    <img class="pinnacleicon" src="pinnacle.png" alt="Pinnacle Logo">
+    <p class="pinnacle">Pinnacle MC</p>
+</div>
+<div class="pinnacleownerbox">
+    <p class="ownerheader">Lead Developer: CookieMonster</p>
+</div>
+<!-- Server Info Section -->
+<div class="server-wrap">
+
+    <div class="server-strip">
+        <div class="server-left">
+            <p class="server-name">Join Pinnacle MC</p>
+            <p class="server-desc">
+                Survival • Economy • Progression • Community Driven
+            </p>
+        </div>
+
+        <div class="server-right">
+            <div class="ip-box">
+                <span id="serverIP">coolcookie.duckdns.org:25566</span>
+                <button onclick="copyIP()">Copy</button>
+            </div>
+        </div>
+    </div>
+<!-- How To Join -->
+<div class="join-box">
+    <p class="join-title">How To Join</p>
+
+    <div class="join-steps">
+        <div class="step">1. Open Minecraft Java/Bedrock</div>
+        <div class="step">2. Click Multiplayer</div>
+        <div class="step">3. Add Server</div>
+        <div class="step">4. Copy & Paste The IP Address</div>
+        <div class="step">5. Join The Server</div>
+    </div>
+</div>
+    <div class="server-grid">
+
+        <div class="panel big">
+            <p class="panel-title">About The Server</p>
+            <p class="panel-text">
+                Pinnacle MC is a minigame minecraft server created by Sparks Development. Hosted and operated by CookieMonster, Pinnacle MC is constantly updatied with a variety of engaging minigames.
+            </p>
+        </div>
+
+        <div class="panel">
+            <p class="panel-title">Game Version</p>
+            <p class="panel-value">1.20+</p>
+        </div>
+
+        <div class="panel">
+            <p class="panel-title">Gamemodes</p>
+            <p class="panel-value">3</p>
+        </div>
+
+        <div class="panel">
+            <p class="panel-title">Status</p>
+            <p class="panel-value">Online</p>
+        </div>
+
+        <div class="panel">
+            <p class="panel-title">Support</p>
+            <p class="panel-value">24/7</p>
+        </div>
+
+    </div>
+    </div>
+
+</div>
+
+<!-- Rank Section -->
+<div class="boxes">
+
+    <div class="silver">
+        <p class="silvertitle">Silver</p>
+        <img class="silvericon" src="1silver.png" alt="Silver Rank">
+
+        <p class="silverlist">
+            • Basic Perks<br>
+            • Community Access<br>
+            • Starter Rewards
+        </p>
+
+        <p class="silverprice">$4.99</p>
+        <button class="silverbutton">Select</button>
+    </div>
+
+    <div class="gold">
+        <p class="goldtitle">Gold</p>
+        <img class="goldicon" src="1gold.png" alt="Gold Rank">
+
+        <p class="goldlist">
+            • Better Rewards<br>
+            • Priority Access<br>
+            • Enhanced Features
+        </p>
+
+        <p class="goldprice">$9.99</p>
+        <button class="goldbutton">Select</button>
+    </div>
+
+    <div class="platinum">
+        <p class="platinumtitle">Platinum</p>
+        <img class="platinumicon" src="1platinum.png" alt="Platinum Rank">
+
+        <p class="platinumlist">
+            • Full Access<br>
+            • Exclusive Features<br>
+            • Maximum Rewards
+        </p>
+
+        <p class="platinumprice">$19.99</p>
+        <button class="platinumbutton">Select</button>
+    </div>
+
+</div>
+
+<!-- Footer -->
+<!-- Footer -->
+<div class="footer">
+
+    <div class="leftfooter">
+        <p class="footerheader">&copy; 2026 Sparks Development</p>
+        <p class="email">sparksdevmail@gmail.com</p>
+
+        <div class="socials">
+            <a href="https://discord.gg/JV7kavuZvj">
+                <img class="discordicon" src="discord2.png" alt="Discord">
+            </a>
+
+            <a href="https://www.youtube.com/@SparksDevelopmentNews">
+                <img class="youtubeicon" src="youtube1.png" alt="YouTube">
+            </a>
+        </div>
+
+        <div class="footerextra">
+            <a href="" class="documentation">Documentation</a>
+            <a href="" class="documentation">Privacy Policy</a>
+            <a href="" class="documentation">Terms of Service</a>
+        </div>
+    </div>
+
+    <div class="rightfooter">
+        <p class="rightfooterheader">Pages</p>
+        <a href="home.html" class="footer-link">Home</a>
+        <a href="page1.html" class="footer-link">Software</a>
+        <a href="page2.html" class="footer-link">Pinnacle MC</a>
+    </div>
+
+</div>
+</div>
+<script>
+function copyIP() {
+    navigator.clipboard.writeText("play.pinnaclemc.com");
+
+    const button = document.querySelector(".ip-box button");
+    button.textContent = "Copied!";
+
+    setTimeout(() => {
+        button.textContent = "Copy";
+    }, 1500);
+}
+</script>
+
+</body>
+</html>
