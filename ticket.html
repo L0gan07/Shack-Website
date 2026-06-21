@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Support | Sparks Development</title>
+
+    <link rel="stylesheet" href="css/tickets.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <div class="ticket-container">
+
+        <h1>Contact Support</h1>
+
+        <p class="subtitle">
+            Need help? Submit a ticket and our team will respond by email.
+        </p>
+
+        <form id="ticketForm">
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Full Name"
+                required
+            >
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Email Address"
+                required
+            >
+
+            <input
+                type="text"
+                id="discord"
+                placeholder="Discord Username (Optional)"
+            >
+
+            <select id="category">
+
+                <option value="General Support">
+                    General Support
+                </option>
+
+                <option value="Bug Report">
+                    Bug Report
+                </option>
+
+                <option value="Launcher">
+                    Launcher
+                </option>
+
+                <option value="Pinnacle MC">
+                    Pinnacle MC
+                </option>
+
+                <option value="Business">
+                    Business
+                </option>
+
+            </select>
+
+            <input
+                type="text"
+                id="subject"
+                placeholder="Subject"
+                required
+            >
+
+            <textarea
+                id="description"
+                placeholder="Describe your issue..."
+                required
+            ></textarea>
+
+            <button type="submit">
+
+                Submit Ticket
+
+            </button>
+
+        </form>
+
+        <p id="responseMessage"></p>
+
+    </div>
+
+    <script src="js/tickets.js"></script>
+
+</body>
+
+</html>
