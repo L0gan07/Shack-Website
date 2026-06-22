@@ -1,8 +1,10 @@
 console.log("Server is starting...");
+
 const express = require("express");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -11,7 +13,18 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Load tickets file
+/* =========================
+   SERVE FRONTEND FILES
+========================= */
+app.use(express.static(__dirname));
+
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+});
+
+/* =========================
+   TICKETS STORAGE
+========================= */
 function loadTickets() {
     try {
         const data = fs.readFileSync("tickets.json");
@@ -21,12 +34,13 @@ function loadTickets() {
     }
 }
 
-// Save tickets file
 function saveTickets(tickets) {
     fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
 }
 
-// Email setup (Gmail SMTP)
+/* =========================
+   EMAIL SETUP
+========================= */
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -35,7 +49,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// API route
+/* =========================
+   API ROUTE
+========================= */
 app.post("/api/ticket", async (req, res) => {
     const ticket = req.body;
 
@@ -47,7 +63,6 @@ app.post("/api/ticket", async (req, res) => {
     tickets.push(ticket);
     saveTickets(tickets);
 
-    // Email to YOU (support inbox)
     const ownerMail = {
         from: process.env.EMAIL_USER,
         to: process.env.EMAIL_USER,
@@ -68,7 +83,6 @@ ${ticket.description}
         `
     };
 
-    // Confirmation email to USER
     const userMail = {
         from: process.env.EMAIL_USER,
         to: ticket.email,
@@ -103,6 +117,9 @@ Our team will respond as soon as possible.
     }
 });
 
+/* =========================
+   START SERVER
+========================= */
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
