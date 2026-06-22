@@ -1,4 +1,4 @@
-console.log("Server is starting...");
+console.log("🚀 Server is starting...");
 
 const express = require("express");
 const nodemailer = require("nodemailer");
@@ -10,24 +10,42 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+/* =========================
+LOGGING MIDDLEWARE
+========================= */
+app.use((req, res, next) => {
+    const time = new Date().toISOString();
+
+    console.log(`\n📥 [${time}] Incoming Request`);
+    console.log(`➡️  Method: ${req.method}`);
+    console.log(`➡️  URL: ${req.url}`);
+    console.log(`➡️  IP: ${req.ip}`);
+    console.log(`➡️  User-Agent: ${req.headers["user-agent"]}`);
+
+    next();
+});
 
 /* =========================
-   SERVE FRONTEND FILES
+MIDDLEWARE
 ========================= */
+app.use(cors());
+app.use(express.json());
 app.use(express.static(__dirname));
 
+/* =========================
+FRONTEND ROUTE
+========================= */
 app.get("/", (req, res) => {
+    console.log("🏠 Serving index.html");
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
-   TICKETS STORAGE
+TICKETS STORAGE
 ========================= */
 function loadTickets() {
     try {
-        const data = fs.readFileSync("tickets.json");
+        const data = fs.readFileSync("tickets.json", "utf8");
         return JSON.parse(data);
     } catch {
         return [];
@@ -39,7 +57,7 @@ function saveTickets(tickets) {
 }
 
 /* =========================
-   EMAIL SETUP
+EMAIL SETUP
 ========================= */
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -50,18 +68,24 @@ const transporter = nodemailer.createTransport({
 });
 
 /* =========================
-   API ROUTE
+API ROUTE
 ========================= */
 app.post("/api/ticket", async (req, res) => {
+    console.log("📩 Ticket API called");
+    console.log("📦 Body:", req.body);
+
     const ticket = req.body;
 
     if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
+        console.log("❌ Missing required fields");
         return res.status(400).json({ error: "Missing required fields" });
     }
 
     let tickets = loadTickets();
     tickets.push(ticket);
     saveTickets(tickets);
+
+    console.log(`💾 Ticket saved: ${ticket.id}`);
 
     const ownerMail = {
         from: process.env.EMAIL_USER,
@@ -74,7 +98,7 @@ ID: ${ticket.id}
 Name: ${ticket.name}
 Email: ${ticket.email}
 Discord: ${ticket.discord || "N/A"}
-Category: ${ticket.category}
+Category: ${ticket.category || "General"}
 
 Subject: ${ticket.subject}
 
@@ -86,40 +110,45 @@ ${ticket.description}
     const userMail = {
         from: process.env.EMAIL_USER,
         to: ticket.email,
-        subject: `Sparks Support Ticket Received (${ticket.id})`,
+        subject: `DeveloperShack Support Ticket (${ticket.id})`,
         text: `
 Hello ${ticket.name},
 
 We have received your support request.
 
 Ticket ID: ${ticket.id}
-Category: ${ticket.category}
+Category: ${ticket.category || "General"}
 Subject: ${ticket.subject}
 
-Our team will respond as soon as possible.
-
-- Sparks Development
+- DeveloperShack Team
         `
     };
 
     try {
+        console.log("📧 Sending emails...");
+
         await transporter.sendMail(ownerMail);
+        console.log("✅ Owner email sent");
+
         await transporter.sendMail(userMail);
+        console.log("✅ User email sent");
 
         res.json({
             success: true,
             id: ticket.id
         });
 
+        console.log("🎉 Ticket request completed successfully");
+
     } catch (err) {
-        console.error(err);
+        console.error("❌ Email failed:", err);
         res.status(500).json({ error: "Email failed to send" });
     }
 });
 
 /* =========================
-   START SERVER
+START SERVER
 ========================= */
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🌐 Server running on http://0.0.0.0:${PORT}`);
 });
