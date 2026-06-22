@@ -236,7 +236,11 @@ html {
     text-decoration: none;
     margin-top: 10px;
 }
-
+.discordicon, .youtubeicon {
+    width: 40x;
+    height: 40px;
+    transition: filter 0.3s ease;
+}
 * {
     box-sizing: border-box;
 }
