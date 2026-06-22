@@ -323,7 +323,9 @@
 .silverbutton,
 .goldbutton,
 .platinumbutton {
-    display: block;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
     margin: 35px auto;
     width: 160px;
     height: 54px;
