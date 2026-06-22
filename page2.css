@@ -325,19 +325,22 @@
 .platinumbutton {
     display: flex;
     align-items: center;
-    vertical-align: middle;
+    justify-content: center;
+
     margin: 35px auto;
     width: 160px;
     height: 54px;
     border-radius: 18px;
     border: none;
     background: white;
+
     font-family: 'DM Sans', sans-serif;
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s ease;
+    text-decoration: none;
+    color: black;
 }
-
 .silverbutton:hover,
 .goldbutton:hover,
 .platinumbutton:hover {
