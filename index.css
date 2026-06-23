@@ -75,8 +75,14 @@ html {
     gap: 15px;
 }
 .explorebutton, .supportbutton {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
     background: white;
-    border-radius: 18px;
+    width: 115px;
+    height: 60px;
+    border-radius: 22px;
     border: none;
     color: #333;
     font-size: 18px;
@@ -107,9 +113,9 @@ html {
     border: none;
     color: white;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 250;
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.4s;
 }
 
 .homebutton:hover,
@@ -117,7 +123,8 @@ html {
 .minecraftbutton:hover,
 .teambutton:hover,
 .ticketbutton:hover {
-    text-decoration: underline;
+  transform: translateY(-5px);
+  text-decoration: underline;
 }
 
 
@@ -160,8 +167,12 @@ html {
     border-radius: 14px;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.08);
+    transition: 0.3s;
 }
-
+.info-box:hover {
+    background: rgba(219, 219, 219, 0.05);
+    transform: translateY(-2px);
+}
 .info-number {
     font-size: 26px;
     font-weight: 800;
