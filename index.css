@@ -17,7 +17,12 @@ html, body {
     max-width: 100%;
     overflow-x: hidden;
 }
-
+.gray {
+    color: rgba(218, 218, 218, 0.6);
+}
+.gray2 {
+    color: rgba(169, 169, 169, 0.8);
+}
 ::-webkit-scrollbar {
     width: 10px;
 }
@@ -50,15 +55,15 @@ html {
     padding-top: 75px;
 }
 
-.sparkslogo {
-    width: 70px;
-    height: 70px;
+.shacklogo {
+    width: 50px;
+    height: 50px;
     border-radius: 10px;
     margin-left: 10px;
     transition: transform 0.3s ease;
 }
 
-.sparkslogo:hover {
+.shacklogo:hover {
     transform: scale(1.08);
 }
 
@@ -70,13 +75,21 @@ html {
     gap: 15px;
 }
 .explorebutton, .supportbutton {
-    background: none;
+    background: white;
+    border-radius: 18px;
     border: none;
-    color: white;
+    color: #333;
     font-size: 18px;
     font-weight: 600;
     cursor: pointer;
     transition: 0.3s;
+    padding: 15px 25px;
+    text-decoration: none;
+}
+.explorebutton:hover, .supportbutton:hover {
+    background: #000000;
+    color: white;
+    border: 1px solid white;
 }
 .sidebuttons {
     margin-left: auto;
@@ -120,6 +133,7 @@ html {
 .hero-title {
     font-size: 56px;
     font-weight: 800;
+    margin-bottom: 0;
 }
 
 .hero-text {
@@ -129,7 +143,7 @@ html {
 }
 
 .hero-buttons {
-    margin-top: 20px;
+    margin-top: 35px;
     display: flex;
     gap: 15px;
 }
@@ -186,8 +200,23 @@ html {
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 999px;
     font-size: 12px;
+    transition: 0.4s;
 }
 
+.purpose-tags span:hover {
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+}
+.purpose-box {
+    padding: 20px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: 0.3s;
+}
+.purpose-box:hover {
+    transform: translateY(-2px);
+}
 .features {
     display: flex;
     justify-content: center;
