@@ -16,7 +16,6 @@ window.addEventListener("DOMContentLoaded", () => {
     if (input && preview) {
         input.addEventListener("change", () => {
             const file = input.files[0];
-
             if (!file) return;
 
             preview.src = URL.createObjectURL(file);
@@ -36,12 +35,9 @@ form.addEventListener("submit", async (e) => {
 
     try {
         const file = document.getElementById("imageUpload").files[0];
-
         let imageURL = null;
 
-        /* -------------------------
-        Upload to Cloudinary
-        ------------------------- */
+        /* Upload image */
         if (file) {
             const formData = new FormData();
             formData.append("file", file);
@@ -62,13 +58,10 @@ form.addEventListener("submit", async (e) => {
             }
 
             imageURL = uploadData.secure_url;
-
             console.log("📸 Uploaded image:", imageURL);
         }
 
-        /* -------------------------
-        Build Ticket
-        ------------------------- */
+        /* Build ticket */
         const ticketData = {
             id: generateTicketID(),
             name: document.getElementById("name").value.trim(),
@@ -80,9 +73,7 @@ form.addEventListener("submit", async (e) => {
             image: imageURL
         };
 
-        /* -------------------------
-        Validation
-        ------------------------- */
+        /* Validation */
         if (
             !ticketData.name ||
             !ticketData.email ||
@@ -97,9 +88,9 @@ form.addEventListener("submit", async (e) => {
             return;
         }
 
-        /* -------------------------
-        SEND TO SERVER
-        ------------------------- */
+        /* =========================
+        IMPORTANT FIX HERE
+        ========================= */
         const res = await fetch("/api/ticket", {
             method: "POST",
             headers: {
@@ -110,9 +101,7 @@ form.addEventListener("submit", async (e) => {
 
         const data = await res.json();
 
-        /* -------------------------
-        RESPONSE HANDLING
-        ------------------------- */
+        /* Response */
         if (res.ok) {
             responseMessage.textContent = `Ticket Created Successfully! ID: ${data.id}`;
             responseMessage.style.color = "rgb(150,201,201)";
