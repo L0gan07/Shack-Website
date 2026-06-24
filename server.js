@@ -114,13 +114,13 @@ ${ticket.description}
         text: `
 Hello ${ticket.name},
 
-We have received your support request.
+We have received your support request, please wait 24-48 hours for our team to respond.
 
 Ticket ID: ${ticket.id}
 Category: ${ticket.category || "General"}
 Subject: ${ticket.subject}
 
-- DeveloperShack Team
+- Shack Support Team
         `
     };
 

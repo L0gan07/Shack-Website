@@ -46,39 +46,45 @@
             Need help? Submit a ticket and our team will respond by email.
         </p>
 
-        <form id="ticketForm">
+<form id="ticketForm">
 
-            <input type="text" id="name" placeholder="Full Name" required>
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="email" id="email" placeholder="Email" required>
 
-            <input type="email" id="email" placeholder="Email Address" required>
+    <input type="text" id="discord" placeholder="Discord (optional)">
+    
+    <select id="category">
+        <option>General</option>
+        <option>Bug</option>
+        <option>Support</option>
+    </select>
 
-            <input type="text" id="discord" placeholder="Discord Username (Optional)">
+    <input type="text" id="subject" placeholder="Subject" required>
 
-            <select id="category">
+    <textarea id="description" placeholder="Describe your issue" required></textarea>
 
-                <option value="General Support">General Support</option>
-                <option value="Bug Report">Bug Report</option>
-                <option value="Launcher">Launcher</option>
-                <option value="Pinnacle MC">Pinnacle MC</option>
-                <option value="Business">Business</option>
+    <!-- IMAGE UPLOAD SECTION -->
+    <label for="imageUpload" class="upload-box">
+        📁 Click to upload image
+        <span>PNG, JPG, or screenshot</span>
+    </label>
 
-            </select>
+    <input type="file" id="imageUpload" accept="image/*">
 
-            <input type="text" id="subject" placeholder="Subject" required>
+    <!-- IMAGE PREVIEW -->
+    <img id="preview" class="image-preview">
 
-            <textarea id="description" placeholder="Describe your issue..." required></textarea>
+    <!-- SUBMIT -->
+    <button type="submit">Submit Ticket</button>
 
-            <button type="submit">Submit Ticket</button>
-
-        </form>
-
+</form>
         <p id="responseMessage"></p>
 
     </div>
 
 </div>
 
-<script src="js/tickets.js"></script>
+<script src="tickets.js"></script>
 
 </body>
 </html>

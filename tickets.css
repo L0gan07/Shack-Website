@@ -64,7 +64,6 @@
     transition: 0.2s ease;
 }
 
-/* focus glow */
 #ticketForm input:focus,
 #ticketForm select:focus,
 #ticketForm textarea:focus {
@@ -72,7 +71,60 @@
     box-shadow: 0 0 10px rgba(255,255,255,0.1);
 }
 
-/* textarea height */
+/* =========================
+   FILE INPUT (HIDDEN)
+========================= */
+#imageUpload {
+    display: none;
+}
+
+/* =========================
+   UPLOAD BOX (CENTERED FIXED)
+========================= */
+.upload-box {
+    width: 100%;
+    max-width: 400px;
+    height: 120px;
+
+    margin: 0 auto; /* CENTER IT */
+
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 15px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    transition: 0.3s ease;
+
+    color: #aaa;
+    text-align: center;
+}
+
+.upload-box:hover {
+    border-color: rgb(150, 201, 201);
+    color: white;
+    transform: scale(1.02);
+}
+
+/* =========================
+   IMAGE PREVIEW (CENTERED FIXED)
+========================= */
+.image-preview {
+    display: none;
+
+    max-width: 200px;
+
+    margin: 10px auto 0;
+
+    border-radius: 10px;
+}
+
+/* =========================
+   TEXTAREA
+========================= */
 #ticketForm textarea {
     min-height: 140px;
     resize: vertical;
@@ -110,7 +162,7 @@
 }
 
 /* =========================
-   MOBILE FIX
+   MOBILE
 ========================= */
 @media (max-width: 600px) {
     .ticket-container {
