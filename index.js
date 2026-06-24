@@ -8,3 +8,4 @@ document.getElementById("ticketForm").addEventListener("submit", function(e) {
 
     console.log(file); // this is your image
 });
+

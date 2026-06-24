@@ -7,15 +7,15 @@ function generateTicketID() {
 }
 
 /* =========================
-   IMAGE PREVIEW (FIXED)
+IMAGE PREVIEW
 ========================= */
 window.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("imageUpload");
     const preview = document.getElementById("preview");
 
     if (input && preview) {
-        input.addEventListener("change", function () {
-            const file = this.files[0];
+        input.addEventListener("change", () => {
+            const file = input.files[0];
 
             if (!file) return;
 
@@ -26,7 +26,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 /* =========================
-   FORM SUBMIT + UPLOAD
+FORM SUBMIT
 ========================= */
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -39,7 +39,9 @@ form.addEventListener("submit", async (e) => {
 
         let imageURL = null;
 
-        // Upload image first
+        /* -------------------------
+        Upload to Cloudinary
+        ------------------------- */
         if (file) {
             const formData = new FormData();
             formData.append("file", file);
@@ -54,25 +56,39 @@ form.addEventListener("submit", async (e) => {
             );
 
             const uploadData = await uploadRes.json();
+
+            if (!uploadData.secure_url) {
+                throw new Error("Image upload failed");
+            }
+
             imageURL = uploadData.secure_url;
 
-            console.log("Uploaded image:", imageURL);
+            console.log("📸 Uploaded image:", imageURL);
         }
 
-        // Build ticket
+        /* -------------------------
+        Build Ticket
+        ------------------------- */
         const ticketData = {
             id: generateTicketID(),
-            name: document.getElementById("name").value,
-            email: document.getElementById("email").value,
-            discord: document.getElementById("discord").value,
+            name: document.getElementById("name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            discord: document.getElementById("discord").value.trim(),
             category: document.getElementById("category").value,
-            subject: document.getElementById("subject").value,
-            description: document.getElementById("description").value,
+            subject: document.getElementById("subject").value.trim(),
+            description: document.getElementById("description").value.trim(),
             image: imageURL
         };
 
-        // Validation
-        if (!ticketData.name || !ticketData.email || !ticketData.subject || !ticketData.description) {
+        /* -------------------------
+        Validation
+        ------------------------- */
+        if (
+            !ticketData.name ||
+            !ticketData.email ||
+            !ticketData.subject ||
+            !ticketData.description
+        ) {
             responseMessage.textContent = "Please fill in all required fields.";
             responseMessage.style.color = "red";
 
@@ -81,7 +97,10 @@ form.addEventListener("submit", async (e) => {
             return;
         }
 
-        const res = await fetch("http://localhost:3000/api/ticket", {
+        /* -------------------------
+        SEND TO SERVER
+        ------------------------- */
+        const res = await fetch("/api/ticket", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -91,6 +110,9 @@ form.addEventListener("submit", async (e) => {
 
         const data = await res.json();
 
+        /* -------------------------
+        RESPONSE HANDLING
+        ------------------------- */
         if (res.ok) {
             responseMessage.textContent = `Ticket Created Successfully! ID: ${data.id}`;
             responseMessage.style.color = "rgb(150,201,201)";
@@ -98,13 +120,13 @@ form.addEventListener("submit", async (e) => {
 
             const preview = document.getElementById("preview");
             if (preview) preview.style.display = "none";
-
         } else {
             responseMessage.textContent = data.error || "Something went wrong.";
             responseMessage.style.color = "red";
         }
 
     } catch (err) {
+        console.error(err);
         responseMessage.textContent = "Server not reachable.";
         responseMessage.style.color = "red";
     }

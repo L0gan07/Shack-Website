@@ -11,16 +11,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* =========================
-LOGGING MIDDLEWARE
+LOGGING MIDDLEWARE (MUST BE FIRST)
 ========================= */
 app.use((req, res, next) => {
     const time = new Date().toISOString();
 
     console.log(`\n📥 [${time}] Incoming Request`);
-    console.log(`➡️  Method: ${req.method}`);
-    console.log(`➡️  URL: ${req.url}`);
-    console.log(`➡️  IP: ${req.ip}`);
-    console.log(`➡️  User-Agent: ${req.headers["user-agent"]}`);
+    console.log(`➡️ Method: ${req.method}`);
+    console.log(`➡️ URL: ${req.url}`);
+    console.log(`➡️ IP: ${req.ip}`);
 
     next();
 });
@@ -36,24 +35,29 @@ app.use(express.static(__dirname));
 FRONTEND ROUTE
 ========================= */
 app.get("/", (req, res) => {
-    console.log("🏠 Serving index.html");
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
-TICKETS STORAGE
+TICKETS STORAGE (SAFE)
 ========================= */
 function loadTickets() {
     try {
+        if (!fs.existsSync("tickets.json")) return [];
         const data = fs.readFileSync("tickets.json", "utf8");
         return JSON.parse(data);
-    } catch {
+    } catch (err) {
+        console.error("❌ Error loading tickets:", err);
         return [];
     }
 }
 
 function saveTickets(tickets) {
-    fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
+    try {
+        fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
+    } catch (err) {
+        console.error("❌ Error saving tickets:", err);
+    }
 }
 
 /* =========================
@@ -76,8 +80,8 @@ app.post("/api/ticket", async (req, res) => {
 
     const ticket = req.body;
 
+    // validation
     if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
-        console.log("❌ Missing required fields");
         return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -87,12 +91,13 @@ app.post("/api/ticket", async (req, res) => {
 
     console.log(`💾 Ticket saved: ${ticket.id}`);
 
-    const ownerMail = {
-        from: process.env.EMAIL_USER,
-        to: process.env.EMAIL_USER,
-        subject: `New Ticket: ${ticket.id} - ${ticket.subject}`,
-        text: `
-New Support Ticket Received
+    try {
+        const ownerMail = {
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_USER,
+            subject: `New Ticket: ${ticket.id} - ${ticket.subject}`,
+            text: `
+New Ticket Received
 
 ID: ${ticket.id}
 Name: ${ticket.name}
@@ -104,45 +109,42 @@ Subject: ${ticket.subject}
 
 Description:
 ${ticket.description}
-        `
-    };
+            `
+        };
 
-    const userMail = {
-        from: process.env.EMAIL_USER,
-        to: ticket.email,
-        subject: `DeveloperShack Support Ticket (${ticket.id})`,
-        text: `
-Hello ${ticket.name},
+        const userMail = {
+            from: process.env.EMAIL_USER,
+            to: ticket.email,
+            subject: `DeveloperShack Ticket (${ticket.id})`,
+            text: `
+Hi ${ticket.name},
 
-We have received your support request, please wait 24-48 hours for our team to respond.
+We received your ticket.
 
-Ticket ID: ${ticket.id}
-Category: ${ticket.category || "General"}
+ID: ${ticket.id}
 Subject: ${ticket.subject}
 
-- Shack Support Team
-        `
-    };
+We will respond within 24–48 hours.
 
-    try {
+- Shack Support
+            `
+        };
+
         console.log("📧 Sending emails...");
 
         await transporter.sendMail(ownerMail);
-        console.log("✅ Owner email sent");
-
         await transporter.sendMail(userMail);
-        console.log("✅ User email sent");
 
-        res.json({
+        console.log("✅ Emails sent");
+
+        return res.json({
             success: true,
             id: ticket.id
         });
 
-        console.log("🎉 Ticket request completed successfully");
-
     } catch (err) {
-        console.error("❌ Email failed:", err);
-        res.status(500).json({ error: "Email failed to send" });
+        console.error("❌ Email error:", err);
+        return res.status(500).json({ error: "Email failed to send" });
     }
 });
 
@@ -150,5 +152,5 @@ Subject: ${ticket.subject}
 START SERVER
 ========================= */
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🌐 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`🌐 Server running on port ${PORT}`);
 });
