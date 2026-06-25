@@ -11,52 +11,44 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* =========================
-LOGGING MIDDLEWARE (MUST BE FIRST)
+MIDDLEWARE
 ========================= */
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
+app.use(express.static(__dirname));
+
 app.use((req, res, next) => {
-    const time = new Date().toISOString();
-
-    console.log(`\n📥 [${time}] Incoming Request`);
-    console.log(`➡️ Method: ${req.method}`);
-    console.log(`➡️ URL: ${req.url}`);
-    console.log(`➡️ IP: ${req.ip}`);
-
+    console.log(`\n📥 ${req.method} ${req.url}`);
     next();
 });
 
 /* =========================
-MIDDLEWARE
-========================= */
-app.use(cors());
-app.use(express.json());
-app.use(express.static(__dirname));
-
-/* =========================
-FRONTEND ROUTE
+FRONTEND
 ========================= */
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
-TICKETS STORAGE (SAFE)
+TICKETS DB
 ========================= */
+const TICKET_FILE = "tickets.json";
+
 function loadTickets() {
     try {
-        if (!fs.existsSync("tickets.json")) return [];
-        const data = fs.readFileSync("tickets.json", "utf8");
-        return JSON.parse(data);
+        if (!fs.existsSync(TICKET_FILE)) return [];
+        return JSON.parse(fs.readFileSync(TICKET_FILE, "utf8"));
     } catch (err) {
-        console.error("❌ Error loading tickets:", err);
+        console.error("❌ Load error:", err);
         return [];
     }
 }
 
 function saveTickets(tickets) {
     try {
-        fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
+        fs.writeFileSync(TICKET_FILE, JSON.stringify(tickets, null, 2));
     } catch (err) {
-        console.error("❌ Error saving tickets:", err);
+        console.error("❌ Save error:", err);
     }
 }
 
@@ -75,67 +67,42 @@ const transporter = nodemailer.createTransport({
 API ROUTE
 ========================= */
 app.post("/api/ticket", async (req, res) => {
-    console.log("📩 Ticket API called");
-    console.log("📦 Body:", req.body);
-
-    const ticket = req.body;
-
-    // validation
-    if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
-        return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    let tickets = loadTickets();
-    tickets.push(ticket);
-    saveTickets(tickets);
-
-    console.log(`💾 Ticket saved: ${ticket.id}`);
 
     try {
-        const ownerMail = {
-            from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER,
-            subject: `New Ticket: ${ticket.id} - ${ticket.subject}`,
-            text: `
-New Ticket Received
+        console.log("📩 Ticket received:", req.body);
 
-ID: ${ticket.id}
-Name: ${ticket.name}
-Email: ${ticket.email}
-Discord: ${ticket.discord || "N/A"}
-Category: ${ticket.category || "General"}
+        const ticket = req.body;
 
-Subject: ${ticket.subject}
+        if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
 
-Description:
-${ticket.description}
-            `
-        };
+        let tickets = loadTickets();
+        tickets.push(ticket);
+        saveTickets(tickets);
 
-        const userMail = {
-            from: process.env.EMAIL_USER,
-            to: ticket.email,
-            subject: `DeveloperShack Ticket (${ticket.id})`,
-            text: `
-Hi ${ticket.name},
+        console.log(`💾 Saved ticket ${ticket.id}`);
 
-We received your ticket.
+        // EMAIL (non-blocking failure protection)
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: process.env.EMAIL_USER,
+                subject: `Ticket ${ticket.id} - ${ticket.subject}`,
+                text: JSON.stringify(ticket, null, 2)
+            });
 
-ID: ${ticket.id}
-Subject: ${ticket.subject}
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: ticket.email,
+                subject: `We received your ticket (${ticket.id})`,
+                text: `Hi ${ticket.name}, we received your ticket. We'll respond soon.`
+            });
 
-We will respond within 24–48 hours.
-
-- Shack Support
-            `
-        };
-
-        console.log("📧 Sending emails...");
-
-        await transporter.sendMail(ownerMail);
-        await transporter.sendMail(userMail);
-
-        console.log("✅ Emails sent");
+            console.log("📧 Emails sent");
+        } catch (emailErr) {
+            console.error("⚠️ Email failed:", emailErr);
+        }
 
         return res.json({
             success: true,
@@ -143,8 +110,8 @@ We will respond within 24–48 hours.
         });
 
     } catch (err) {
-        console.error("❌ Email error:", err);
-        return res.status(500).json({ error: "Email failed to send" });
+        console.error("❌ Server error:", err);
+        return res.status(500).json({ error: "Internal server error" });
     }
 });
 

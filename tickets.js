@@ -16,9 +16,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
     console.log("🔥 tickets.js loaded");
 
-    /* =========================
-    IMAGE PREVIEW
-    ========================= */
     const input = document.getElementById("imageUpload");
     const preview = document.getElementById("preview");
 
@@ -32,9 +29,6 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    /* =========================
-    FORM SUBMIT
-    ========================= */
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -42,9 +36,11 @@ window.addEventListener("DOMContentLoaded", () => {
         button.textContent = "Submitting...";
 
         try {
-            const file = document.getElementById("imageUpload").files[0];
             let imageURL = null;
 
+            const file = document.getElementById("imageUpload")?.files?.[0];
+
+            // Upload image if exists
             if (file) {
                 const formData = new FormData();
                 formData.append("file", file);
@@ -52,15 +48,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
                 const uploadRes = await fetch(
                     "https://api.cloudinary.com/v1_1/dfvureiis/image/upload",
-                    {
-                        method: "POST",
-                        body: formData
-                    }
+                    { method: "POST", body: formData }
                 );
 
                 const uploadData = await uploadRes.json();
 
-                if (!uploadData.secure_url) {
+                if (!uploadRes.ok || !uploadData.secure_url) {
                     throw new Error("Image upload failed");
                 }
 
@@ -78,6 +71,8 @@ window.addEventListener("DOMContentLoaded", () => {
                 image: imageURL
             };
 
+            console.log("📤 Sending ticket:", ticketData);
+
             const res = await fetch("/api/ticket", {
                 method: "POST",
                 headers: {
@@ -88,17 +83,17 @@ window.addEventListener("DOMContentLoaded", () => {
 
             const data = await res.json();
 
-            if (res.ok) {
-                responseMessage.textContent = `Ticket Created Successfully! ID: ${data.id}`;
-                form.reset();
-                if (preview) preview.style.display = "none";
-            } else {
-                responseMessage.textContent = data.error || "Something went wrong.";
+            if (!res.ok) {
+                throw new Error(data.error || "Request failed");
             }
+
+            responseMessage.textContent = `Ticket Created! ID: ${data.id}`;
+            form.reset();
+            if (preview) preview.style.display = "none";
 
         } catch (err) {
             console.error(err);
-            responseMessage.textContent = "Server not reachable.";
+            responseMessage.textContent = "❌ Failed to submit ticket.";
         }
 
         button.disabled = false;
