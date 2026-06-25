@@ -1,7 +1,8 @@
-console.log("RESEND KEY LOADED:", !!process.env.RESEND_API_KEY);
-console.log("🚀 Server is starting...");
+require("dotenv").config();
 
-require("dotenv").config(); // MUST BE FIRST
+console.log("CWD:", process.cwd());
+console.log("RESEND KEY EXISTS:", !!process.env.RESEND_API_KEY);
+console.log("RESEND KEY RAW:", process.env.RESEND_API_KEY);
 
 const express = require("express");
 const fs = require("fs");
@@ -13,7 +14,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* =========================
-RESEND SETUP
+DEBUG STARTUP
+========================= */
+console.log("RESEND KEY LOADED:", !!process.env.RESEND_API_KEY);
+console.log("🚀 Server is starting...");
+
+/* =========================
+HARD CHECK (FAIL FAST)
 ========================= */
 if (!process.env.RESEND_API_KEY) {
     console.error("❌ Missing RESEND_API_KEY in .env");
@@ -30,7 +37,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 /* =========================
-FRONTEND
+FRONTEND ROUTE
 ========================= */
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
@@ -65,10 +72,16 @@ app.post("/api/ticket", async (req, res) => {
 
     const ticket = req.body;
 
-    if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
+    if (
+        !ticket.name ||
+        !ticket.email ||
+        !ticket.subject ||
+        !ticket.description
+    ) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Save ticket locally
     let tickets = loadTickets();
     tickets.push(ticket);
     saveTickets(tickets);
@@ -82,26 +95,36 @@ app.post("/api/ticket", async (req, res) => {
             subject: `New Ticket: ${ticket.subject}`,
             html: `
                 <h2>New Ticket</h2>
+
                 <p><b>ID:</b> ${ticket.id || "N/A"}</p>
                 <p><b>Name:</b> ${ticket.name}</p>
                 <p><b>Email:</b> ${ticket.email}</p>
                 <p><b>Discord:</b> ${ticket.discord || "N/A"}</p>
                 <p><b>Category:</b> ${ticket.category || "General"}</p>
+
                 <h3>Description</h3>
                 <p>${ticket.description}</p>
-            `
+
+                <p><b>Image:</b> ${
+                    ticket.image
+                        ? `<a href="${ticket.image}" target="_blank">View Image</a>`
+                        : "None"
+                }</p>
+            `,
         });
-<p><b>Image:</b> ${ticket.image ? `<a href="${ticket.image}">View Image</a>` : "None"}</p>
+
         console.log("✅ Email sent:", result);
 
         return res.json({
             success: true,
-            id: ticket.id
+            id: ticket.id,
         });
 
     } catch (err) {
         console.error("❌ Resend error:", err);
-        return res.status(500).json({ error: "Email failed via Resend" });
+        return res.status(500).json({
+            error: "Email failed via Resend",
+        });
     }
 });
 
