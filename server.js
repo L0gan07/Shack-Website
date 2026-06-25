@@ -1,8 +1,8 @@
-require("dotenv").config();
+require("dotenv").config(); // MUST be first
 
-console.log("CWD:", process.cwd());
-console.log("RESEND KEY EXISTS:", !!process.env.RESEND_API_KEY);
-console.log("RESEND KEY RAW:", process.env.RESEND_API_KEY);
+console.log("🚀 Server is starting...");
+console.log("📂 CWD:", process.cwd());
+console.log("🔑 RESEND KEY EXISTS:", !!process.env.RESEND_API_KEY);
 
 const express = require("express");
 const fs = require("fs");
@@ -14,16 +14,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* =========================
-DEBUG STARTUP
-========================= */
-console.log("RESEND KEY LOADED:", !!process.env.RESEND_API_KEY);
-console.log("🚀 Server is starting...");
-
-/* =========================
-HARD CHECK (FAIL FAST)
+HARD CHECK (STOP IF BROKEN)
 ========================= */
 if (!process.env.RESEND_API_KEY) {
-    console.error("❌ Missing RESEND_API_KEY in .env");
+    console.error("❌ Missing RESEND_API_KEY in environment");
     process.exit(1);
 }
 
@@ -37,30 +31,33 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 /* =========================
-FRONTEND ROUTE
+FRONTEND
 ========================= */
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
-TICKETS STORAGE
+TICKET STORAGE
 ========================= */
 function loadTickets() {
     try {
         if (!fs.existsSync("tickets.json")) return [];
         return JSON.parse(fs.readFileSync("tickets.json", "utf8"));
     } catch (err) {
-        console.error("Load error:", err);
+        console.error("❌ Load error:", err);
         return [];
     }
 }
 
 function saveTickets(tickets) {
     try {
-        fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
+        fs.writeFileSync(
+            "tickets.json",
+            JSON.stringify(tickets, null, 2)
+        );
     } catch (err) {
-        console.error("Save error:", err);
+        console.error("❌ Save error:", err);
     }
 }
 
@@ -81,13 +78,13 @@ app.post("/api/ticket", async (req, res) => {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Save ticket locally
+    // save ticket
     let tickets = loadTickets();
     tickets.push(ticket);
     saveTickets(tickets);
 
     try {
-        console.log("📧 Sending via Resend...");
+        console.log("📧 Sending email via Resend...");
 
         const result = await resend.emails.send({
             from: "Shack Support <onboarding@resend.dev>",
@@ -105,11 +102,13 @@ app.post("/api/ticket", async (req, res) => {
                 <h3>Description</h3>
                 <p>${ticket.description}</p>
 
-                <p><b>Image:</b> ${
-                    ticket.image
-                        ? `<a href="${ticket.image}" target="_blank">View Image</a>`
-                        : "None"
-                }</p>
+                <p>
+                    <b>Image:</b> ${
+                        ticket.image
+                            ? `<a href="${ticket.image}" target="_blank">View Image</a>`
+                            : "None"
+                    }
+                </p>
             `,
         });
 
