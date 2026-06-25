@@ -1,14 +1,17 @@
 console.log("🚀 Server is starting...");
 
 const express = require("express");
-const nodemailer = require("nodemailer");
 const fs = require("fs");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
 
+const { Resend } = require("resend");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* =========================
 MIDDLEWARE
@@ -23,14 +26,14 @@ app.use((req, res, next) => {
 });
 
 /* =========================
-FRONTEND
+FRONTEND ROUTE
 ========================= */
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
-TICKETS DB
+TICKETS STORAGE
 ========================= */
 const TICKET_FILE = "tickets.json";
 
@@ -53,55 +56,61 @@ function saveTickets(tickets) {
 }
 
 /* =========================
-EMAIL SETUP
-========================= */
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
-/* =========================
 API ROUTE
 ========================= */
 app.post("/api/ticket", async (req, res) => {
-
     try {
         console.log("📩 Ticket received:", req.body);
 
         const ticket = req.body;
 
+        // validation
         if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        let tickets = loadTickets();
+        // save ticket
+        const tickets = loadTickets();
         tickets.push(ticket);
         saveTickets(tickets);
 
-        console.log(`💾 Saved ticket ${ticket.id}`);
+        console.log(`💾 Ticket saved: ${ticket.id}`);
 
-        // EMAIL (non-blocking failure protection)
+        // EMAIL (Resend)
         try {
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: process.env.EMAIL_USER,
-                subject: `Ticket ${ticket.id} - ${ticket.subject}`,
-                text: JSON.stringify(ticket, null, 2)
+            await resend.emails.send({
+                from: process.env.EMAIL_FROM,
+                to: process.env.EMAIL_FROM,
+                subject: `New Ticket: ${ticket.id} - ${ticket.subject}`,
+                html: `
+                    <h2>New Ticket Received</h2>
+                    <p><b>ID:</b> ${ticket.id}</p>
+                    <p><b>Name:</b> ${ticket.name}</p>
+                    <p><b>Email:</b> ${ticket.email}</p>
+                    <p><b>Discord:</b> ${ticket.discord || "N/A"}</p>
+                    <p><b>Category:</b> ${ticket.category || "General"}</p>
+                    <p><b>Description:</b><br>${ticket.description}</p>
+                `
             });
 
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
+            await resend.emails.send({
+                from: process.env.EMAIL_FROM,
                 to: ticket.email,
                 subject: `We received your ticket (${ticket.id})`,
-                text: `Hi ${ticket.name}, we received your ticket. We'll respond soon.`
+                html: `
+                    <p>Hi ${ticket.name},</p>
+                    <p>We received your ticket.</p>
+                    <p><b>ID:</b> ${ticket.id}</p>
+                    <p>We will respond within 24–48 hours.</p>
+                    <br>
+                    <p>- Shack Support</p>
+                `
             });
 
-            console.log("📧 Emails sent");
+            console.log("📧 Emails sent via Resend");
+
         } catch (emailErr) {
-            console.error("⚠️ Email failed:", emailErr);
+            console.error("⚠️ Email failed (non-blocking):", emailErr);
         }
 
         return res.json({
