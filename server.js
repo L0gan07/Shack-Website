@@ -1,4 +1,5 @@
-require("dotenv").config(); // MUST be first
+require("dotenv").config({ path: "/root/Shack-Website/.env" });
+console.log("RESEND KEY:", process.env.RESEND_API_KEY);
 
 console.log("🚀 Server is starting...");
 console.log("📂 CWD:", process.cwd());
@@ -13,8 +14,22 @@ const { Resend } = require("resend");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.post(
+  "/api/inbound-email",
+  express.urlencoded({ extended: true }),
+  (req, res) => {
+    console.log("📩 INBOUND EMAIL RECEIVED");
+
+    console.log("From:", req.body.from);
+    console.log("Subject:", req.body.subject);
+    console.log("Body:", req.body["body-plain"]);
+
+    res.status(200).send("OK");
+  }
+);
+
 /* =========================
-HARD CHECK (STOP IF BROKEN)
+HARD CHECK
 ========================= */
 if (!process.env.RESEND_API_KEY) {
     console.error("❌ Missing RESEND_API_KEY in environment");
@@ -52,10 +67,7 @@ function loadTickets() {
 
 function saveTickets(tickets) {
     try {
-        fs.writeFileSync(
-            "tickets.json",
-            JSON.stringify(tickets, null, 2)
-        );
+        fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
     } catch (err) {
         console.error("❌ Save error:", err);
     }
@@ -78,22 +90,27 @@ app.post("/api/ticket", async (req, res) => {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // save ticket
+    // Save ticket
     let tickets = loadTickets();
     tickets.push(ticket);
     saveTickets(tickets);
 
+    const threadId = `<shack-ticket-${ticket.id}@developershack.com>`;
+
     try {
         console.log("📧 Sending email via Resend...");
 
-        const result = await resend.emails.send({
-            from: "Shack Support <onboarding@resend.dev>",
+        await resend.emails.send({
+            from: "Shack Support <support@developershack.com>",
             to: process.env.RESEND_TO_EMAIL,
-            subject: `New Ticket: ${ticket.subject}`,
+            subject: `[Shack Ticket #${ticket.id}] ${ticket.subject}`,
+            headers: {
+                "Message-ID": threadId
+            },
             html: `
                 <h2>New Ticket</h2>
 
-                <p><b>ID:</b> ${ticket.id || "N/A"}</p>
+                <p><b>ID:</b> ${ticket.id}</p>
                 <p><b>Name:</b> ${ticket.name}</p>
                 <p><b>Email:</b> ${ticket.email}</p>
                 <p><b>Discord:</b> ${ticket.discord || "N/A"}</p>
@@ -101,6 +118,8 @@ app.post("/api/ticket", async (req, res) => {
 
                 <h3>Description</h3>
                 <p>${ticket.description}</p>
+
+                <p><b>Reply to this email to respond to this ticket.</b></p>
 
                 <p>
                     <b>Image:</b> ${
@@ -112,7 +131,7 @@ app.post("/api/ticket", async (req, res) => {
             `,
         });
 
-        console.log("✅ Email sent:", result);
+        console.log("✅ Email sent");
 
         return res.json({
             success: true,
