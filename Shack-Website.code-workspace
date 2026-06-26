@@ -4,10 +4,13 @@
 			"path": "."
 		},
 		{
-			"path": "../../Downloads/node_modules"
+			"path": "."
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "."
 		}
-	],
-	"settings": {
-		"liveServer.settings.multiRootWorkspaceName": "Shack-Website"
-	}
+	]
 }
