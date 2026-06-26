@@ -124,7 +124,8 @@ html {
 .teambutton:hover,
 .ticketbutton:hover {
   transform: translateY(-5px);
-  text-decoration: underline;
+  text-decoration: under
+  line;
   cursor: pointer;
 }
 

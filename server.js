@@ -1,9 +1,10 @@
-require("dotenv").config({ path: "/root/Shack-Website/.env" });
-console.log("RESEND KEY:", process.env.RESEND_API_KEY);
+if (global.__SERVER_RUNNING__) {
+    console.log("⚠️ Server already running - skipping duplicate init");
+    process.exit(0);
+}
+global.__SERVER_RUNNING__ = true;
 
-console.log("🚀 Server is starting...");
-console.log("📂 CWD:", process.cwd());
-console.log("🔑 RESEND KEY EXISTS:", !!process.env.RESEND_API_KEY);
+require("dotenv").config({ path: "/root/Shack-Website/.env" });
 
 const express = require("express");
 const fs = require("fs");
@@ -14,36 +15,28 @@ const { Resend } = require("resend");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.post(
-  "/api/inbound-email",
-  express.urlencoded({ extended: true }),
-  (req, res) => {
-    console.log("📩 INBOUND EMAIL RECEIVED");
-
-    console.log("From:", req.body.from);
-    console.log("Subject:", req.body.subject);
-    console.log("Body:", req.body["body-plain"]);
-
-    res.status(200).send("OK");
-  }
-);
-
-/* =========================
-HARD CHECK
-========================= */
-if (!process.env.RESEND_API_KEY) {
-    console.error("❌ Missing RESEND_API_KEY in environment");
-    process.exit(1);
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+console.log("🚀 Server starting...");
+console.log("📂 CWD:", process.cwd());
+console.log("🔑 RESEND KEY EXISTS:", !!process.env.RESEND_API_KEY);
+console.log("📧 RESEND TO:", process.env.RESEND_TO_EMAIL);
 
 /* =========================
 MIDDLEWARE
 ========================= */
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
+
+/* =========================
+RESEND INIT (SAFE)
+========================= */
+if (!process.env.RESEND_API_KEY) {
+    console.error("❌ Missing RESEND_API_KEY");
+    process.exit(1);
+}
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* =========================
 FRONTEND
@@ -74,76 +67,93 @@ function saveTickets(tickets) {
 }
 
 /* =========================
-API ROUTE
+CREATE TICKET
 ========================= */
 app.post("/api/ticket", async (req, res) => {
     console.log("📩 Ticket received");
 
     const ticket = req.body;
 
-    if (
-        !ticket.name ||
-        !ticket.email ||
-        !ticket.subject ||
-        !ticket.description
-    ) {
-        return res.status(400).json({ error: "Missing required fields" });
+    if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
+        return res.status(400).json({ error: "Missing fields" });
     }
 
-    // Save ticket
     let tickets = loadTickets();
     tickets.push(ticket);
     saveTickets(tickets);
 
-    const threadId = `<shack-ticket-${ticket.id}@developershack.com>`;
-
     try {
-        console.log("📧 Sending email via Resend...");
+        console.log("📧 Sending confirmation email...");
 
-        await resend.emails.send({
+        const result = await resend.emails.send({
             from: "Shack Support <support@developershack.com>",
             to: process.env.RESEND_TO_EMAIL,
-            subject: `[Shack Ticket #${ticket.id}] ${ticket.subject}`,
-            headers: {
-                "Message-ID": threadId
-            },
+            subject: `[SPK-${ticket.id}] ${ticket.subject}`,
+            replyTo: ticket.email,
             html: `
-                <h2>New Ticket</h2>
-
-                <p><b>ID:</b> ${ticket.id}</p>
+                <h2>New Shack Ticket</h2>
+                <p><b>ID:</b> SPK-${ticket.id}</p>
                 <p><b>Name:</b> ${ticket.name}</p>
                 <p><b>Email:</b> ${ticket.email}</p>
-                <p><b>Discord:</b> ${ticket.discord || "N/A"}</p>
-                <p><b>Category:</b> ${ticket.category || "General"}</p>
-
                 <h3>Description</h3>
                 <p>${ticket.description}</p>
-
-                <p><b>Reply to this email to respond to this ticket.</b></p>
-
-                <p>
-                    <b>Image:</b> ${
-                        ticket.image
-                            ? `<a href="${ticket.image}" target="_blank">View Image</a>`
-                            : "None"
-                    }
-                </p>
-            `,
+            `
         });
 
-        console.log("✅ Email sent");
+        console.log("📨 RESEND RESPONSE:", result);
 
         return res.json({
             success: true,
-            id: ticket.id,
+            id: ticket.id
         });
 
     } catch (err) {
-        console.error("❌ Resend error:", err);
-        return res.status(500).json({
-            error: "Email failed via Resend",
-        });
+        console.error("❌ RESEND FAILED:", err);
+        return res.status(500).json({ error: "Email failed" });
     }
+});
+
+/* =========================
+INBOUND EMAIL
+========================= */
+app.post("/api/inbound-email", (req, res) => {
+    console.log("📩 EMAIL REPLY RECEIVED");
+
+    const subject = req.body.subject || "";
+
+    const match = subject.match(/SPK-\d+/);
+
+    if (!match) {
+        console.log("❌ No ticket ID found");
+        return res.status(200).send("OK");
+    }
+
+    const ticketId = match[0];
+
+    let tickets = loadTickets();
+
+    const ticket = tickets.find(t =>
+        `SPK-${t.id}` === ticketId || t.id === ticketId
+    );
+
+    if (!ticket) {
+        console.log("❌ Ticket not found");
+        return res.status(200).send("OK");
+    }
+
+    ticket.messages = ticket.messages || [];
+
+    ticket.messages.push({
+        from: req.body.from,
+        text: req.body["stripped-text"] || "",
+        time: Date.now()
+    });
+
+    saveTickets(tickets);
+
+    console.log("✅ Message stored for:", ticketId);
+
+    res.status(200).send("OK");
 });
 
 /* =========================
