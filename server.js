@@ -1,9 +1,3 @@
-if (global.__SERVER_RUNNING__) {
-    console.log("⚠️ Server already running - skipping duplicate init");
-    process.exit(0);
-}
-global.__SERVER_RUNNING__ = true;
-
 require("dotenv").config({ path: "/root/Shack-Website/.env" });
 
 const express = require("express");
@@ -18,7 +12,14 @@ const PORT = process.env.PORT || 3000;
 console.log("🚀 Server starting...");
 console.log("📂 CWD:", process.cwd());
 console.log("🔑 RESEND KEY EXISTS:", !!process.env.RESEND_API_KEY);
-console.log("📧 RESEND TO:", process.env.RESEND_TO_EMAIL);
+console.log("📧 SUPPORT INBOX:", process.env.RESEND_TO_EMAIL);
+
+if (!process.env.RESEND_API_KEY) {
+    console.error("❌ Missing RESEND_API_KEY");
+    process.exit(1);
+}
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* =========================
 MIDDLEWARE
@@ -29,16 +30,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
 /* =========================
-RESEND INIT (SAFE)
-========================= */
-if (!process.env.RESEND_API_KEY) {
-    console.error("❌ Missing RESEND_API_KEY");
-    process.exit(1);
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-/* =========================
 FRONTEND
 ========================= */
 app.get("/", (req, res) => {
@@ -46,24 +37,15 @@ app.get("/", (req, res) => {
 });
 
 /* =========================
-TICKET STORAGE
+TICKETS
 ========================= */
 function loadTickets() {
-    try {
-        if (!fs.existsSync("tickets.json")) return [];
-        return JSON.parse(fs.readFileSync("tickets.json", "utf8"));
-    } catch (err) {
-        console.error("❌ Load error:", err);
-        return [];
-    }
+    if (!fs.existsSync("tickets.json")) return [];
+    return JSON.parse(fs.readFileSync("tickets.json", "utf8"));
 }
 
 function saveTickets(tickets) {
-    try {
-        fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
-    } catch (err) {
-        console.error("❌ Save error:", err);
-    }
+    fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
 }
 
 /* =========================
@@ -74,6 +56,8 @@ app.post("/api/ticket", async (req, res) => {
 
     const ticket = req.body;
 
+    console.log("USER EMAIL:", ticket.email);
+
     if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
         return res.status(400).json({ error: "Missing fields" });
     }
@@ -83,24 +67,43 @@ app.post("/api/ticket", async (req, res) => {
     saveTickets(tickets);
 
     try {
-        console.log("📧 Sending confirmation email...");
+        /* =========================
+        EMAIL 1 — SHACK SUPPORT
+        ========================= */
+        console.log("📧 Sending SHACK email...");
 
-        const result = await resend.emails.send({
-            from: "Shack Support <support@developershack.com>",
+        await resend.emails.send({
+            from: "Shack Support <onboarding@resend.dev>",
             to: process.env.RESEND_TO_EMAIL,
             subject: `[SPK-${ticket.id}] ${ticket.subject}`,
             replyTo: ticket.email,
             html: `
-                <h2>New Shack Ticket</h2>
+                <h2>New Ticket</h2>
                 <p><b>ID:</b> SPK-${ticket.id}</p>
                 <p><b>Name:</b> ${ticket.name}</p>
                 <p><b>Email:</b> ${ticket.email}</p>
-                <h3>Description</h3>
-                <p>${ticket.description}</p>
+                <p><b>Description:</b> ${ticket.description}</p>
             `
         });
 
-        console.log("📨 RESEND RESPONSE:", result);
+        /* =========================
+        EMAIL 2 — USER CONFIRMATION
+        ========================= */
+        console.log("📧 Sending USER confirmation email...");
+
+        await resend.emails.send({
+            from: "Shack Support <onboarding@resend.dev>",
+            to: ticket.email,
+            subject: `[SPK-${ticket.id}] We received your ticket`,
+            html: `
+                <h2>We got your ticket</h2>
+                <p>Your ticket ID is:</p>
+                <h3>SPK-${ticket.id}</h3>
+                <p>We will reply soon.</p>
+            `
+        });
+
+        console.log("✅ BOTH EMAILS SENT");
 
         return res.json({
             success: true,
@@ -108,25 +111,21 @@ app.post("/api/ticket", async (req, res) => {
         });
 
     } catch (err) {
-        console.error("❌ RESEND FAILED:", err);
+        console.error("❌ EMAIL ERROR:", err);
         return res.status(500).json({ error: "Email failed" });
     }
 });
 
 /* =========================
-INBOUND EMAIL
+INBOUND EMAIL (REPLIES)
 ========================= */
 app.post("/api/inbound-email", (req, res) => {
     console.log("📩 EMAIL REPLY RECEIVED");
 
     const subject = req.body.subject || "";
-
     const match = subject.match(/SPK-\d+/);
 
-    if (!match) {
-        console.log("❌ No ticket ID found");
-        return res.status(200).send("OK");
-    }
+    if (!match) return res.status(200).send("OK");
 
     const ticketId = match[0];
 
@@ -136,10 +135,7 @@ app.post("/api/inbound-email", (req, res) => {
         `SPK-${t.id}` === ticketId || t.id === ticketId
     );
 
-    if (!ticket) {
-        console.log("❌ Ticket not found");
-        return res.status(200).send("OK");
-    }
+    if (!ticket) return res.status(200).send("OK");
 
     ticket.messages = ticket.messages || [];
 
@@ -151,7 +147,7 @@ app.post("/api/inbound-email", (req, res) => {
 
     saveTickets(tickets);
 
-    console.log("✅ Message stored for:", ticketId);
+    console.log("✅ Stored reply for:", ticketId);
 
     res.status(200).send("OK");
 });
