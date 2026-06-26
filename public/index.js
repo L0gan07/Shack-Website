@@ -1,121 +1,109 @@
-const form = document.getElementById("ticketForm");
-const responseMessage = document.getElementById("responseMessage");
-const button = form.querySelector("button");
+require("dotenv").config({ path: "/root/Shack-Website/.env" });
 
-function generateTicketID() {
-    return "SPK-" + Math.floor(1000 + Math.random() * 9000);
+const express = require("express");
+const fs = require("fs");
+const cors = require("cors");
+const path = require("path");
+const { Resend } = require("resend");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+console.log("🚀 Server starting...");
+console.log("📂 CWD:", process.cwd());
+
+/* =========================
+MIDDLEWARE
+========================= */
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ THIS IS THE IMPORTANT FIX
+app.use(express.static(path.join(__dirname, "public")));
+
+/* =========================
+FRONTEND ROUTES
+========================= */
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+});
+
+/* =========================
+TICKETS STORAGE
+========================= */
+function loadTickets() {
+    if (!fs.existsSync("tickets.json")) return [];
+    return JSON.parse(fs.readFileSync("tickets.json", "utf8"));
+}
+
+function saveTickets(tickets) {
+    fs.writeFileSync("tickets.json", JSON.stringify(tickets, null, 2));
 }
 
 /* =========================
-IMAGE PREVIEW
+EMAIL (RESEND)
 ========================= */
-window.addEventListener("DOMContentLoaded", () => {
-    const input = document.getElementById("imageUpload");
-    const preview = document.getElementById("preview");
+if (!process.env.RESEND_API_KEY) {
+    console.error("❌ Missing RESEND_API_KEY");
+    process.exit(1);
+}
 
-    if (input && preview) {
-        input.addEventListener("change", () => {
-            const file = input.files[0];
-            if (!file) return;
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = "block";
+/* =========================
+CREATE TICKET
+========================= */
+app.post("/api/ticket", async (req, res) => {
+    try {
+        const ticket = req.body;
+
+        if (!ticket.name || !ticket.email || !ticket.subject || !ticket.description) {
+            return res.status(400).json({ error: "Missing fields" });
+        }
+
+        let tickets = loadTickets();
+        tickets.push(ticket);
+        saveTickets(tickets);
+
+        console.log("📩 Ticket received:", ticket.id);
+
+        await resend.emails.send({
+            from: "Shack Support <onboarding@resend.dev>",
+            to: process.env.RESEND_TO_EMAIL,
+            subject: `[SPK-${ticket.id}] ${ticket.subject}`,
+            replyTo: ticket.email,
+            html: `
+                <h2>New Ticket</h2>
+                <p><b>ID:</b> SPK-${ticket.id}</p>
+                <p><b>Name:</b> ${ticket.name}</p>
+                <p><b>Email:</b> ${ticket.email}</p>
+                <p><b>Description:</b> ${ticket.description}</p>
+            `
         });
+
+        await resend.emails.send({
+            from: "Shack Support <onboarding@resend.dev>",
+            to: ticket.email,
+            subject: `[SPK-${ticket.id}] We received your ticket`,
+            html: `
+                <h2>We got your ticket</h2>
+                <p>Your ticket ID is:</p>
+                <h3>SPK-${ticket.id}</h3>
+            `
+        });
+
+        return res.json({ success: true, id: ticket.id });
+
+    } catch (err) {
+        console.error("❌ EMAIL ERROR:", err);
+        return res.status(500).json({ error: "Email failed" });
     }
 });
 
 /* =========================
-FORM SUBMIT
+START SERVER
 ========================= */
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    button.disabled = true;
-    button.textContent = "Submitting...";
-
-    try {
-        const file = document.getElementById("imageUpload").files[0];
-        let imageURL = null;
-
-        /* Upload image */
-        if (file) {
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", "tickets");
-
-            const uploadRes = await fetch(
-                "https://api.cloudinary.com/v1_1/dfvureiis/image/upload",
-                {
-                    method: "POST",
-                    body: formData
-                }
-            );
-
-            const uploadData = await uploadRes.json();
-
-            if (!uploadData.secure_url) {
-                throw new Error("Image upload failed");
-            }
-
-            imageURL = uploadData.secure_url;
-        }
-
-        /* Ticket data */
-        const ticketData = {
-            id: generateTicketID(),
-            name: document.getElementById("name").value.trim(),
-            email: document.getElementById("email").value.trim(),
-            discord: document.getElementById("discord").value.trim(),
-            category: document.getElementById("category").value,
-            subject: document.getElementById("subject").value.trim(),
-            description: document.getElementById("description").value.trim(),
-            image: imageURL
-        };
-
-        /* Validation */
-        if (
-            !ticketData.name ||
-            !ticketData.email ||
-            !ticketData.subject ||
-            !ticketData.description
-        ) {
-            responseMessage.textContent = "Please fill in all required fields.";
-            responseMessage.style.color = "red";
-
-            button.disabled = false;
-            button.textContent = "Submit Ticket";
-            return;
-        }
-
-        /* SEND TO BACKEND */
-        const res = await fetch("/api/ticket", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(ticketData)
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            responseMessage.textContent = `Ticket Created Successfully! ID: ${data.id}`;
-            responseMessage.style.color = "rgb(150,201,201)";
-            form.reset();
-
-            const preview = document.getElementById("preview");
-            if (preview) preview.style.display = "none";
-        } else {
-            responseMessage.textContent = data.error || "Something went wrong.";
-            responseMessage.style.color = "red";
-        }
-
-    } catch (err) {
-        console.error(err);
-        responseMessage.textContent = "Server not reachable.";
-        responseMessage.style.color = "red";
-    }
-
-    button.disabled = false;
-    button.textContent = "Submit Ticket";
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🌐 Server running on port ${PORT}`);
 });
