@@ -27,21 +27,33 @@ if (process.env.RESEND_API_KEY) {
 /* =========================
 MIDDLEWARE
 ========================= */
+const publicDir = path.join(__dirname, "public");
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ Serve public/ as the static folder
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(publicDir));
 
 // ✅ Preserve existing /images URLs by serving the same files from public/
-app.use("/images", express.static(path.join(__dirname, "public")));
+app.use("/images", express.static(publicDir));
+
+// ✅ Fallback for /images/* requests
+app.get("/images/*", (req, res, next) => {
+    const reqPath = req.path.replace(/^\/images\//, "");
+    const filePath = path.join(publicDir, reqPath);
+    if (fs.existsSync(filePath)) {
+        return res.sendFile(filePath);
+    }
+    return next();
+});
 
 /* =========================
 FRONTEND ROUTE
 ========================= */
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(publicDir, "index.html"));
 });
 
 /* =========================
